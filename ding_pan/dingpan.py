@@ -9,7 +9,6 @@ from ding_pan.dingpan_analysis import analysis_dingpan
 
 def get_dingpan_data():
     response = requests.get(
-
         "http://api.waizaowang.com/doc/getWatchStockTimeKLine?type=1&code=all&export=5&token"
         "=5b98e82a71a2afd3b84c5d14ad192c57&fields=code,tdate,price,zdfd,zded,cjl,cje,zhfu,hslv,name,"
         "high,low,open,zrspj,zsz,ltsz,ssdate,z50,z52,z53,ztj,dtj")
@@ -59,4 +58,4 @@ def check_trade_or_not():
     return tradestate
 
 
-start_dingpan()
+#start_dingpan()

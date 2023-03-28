@@ -57,3 +57,10 @@ def select_trade_date():
     df = pd.read_sql(mysql_1, conn)
     return df
 
+
+# 获取概念数据
+def select_share_gainian():
+    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+    mysql_1 = "SELECT  * FROM share_gainian "
+    df = pd.read_sql(mysql_1, conn)
+    return df
