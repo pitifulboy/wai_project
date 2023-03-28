@@ -52,6 +52,6 @@ def draw_pic_amounts(ndays):
 
     mygrid = Grid(opts.InitOpts(bg_color='white', width="1600px", height="900px"))
     mygrid.add(overlap_bar_line, grid_opts=opts.GridOpts(pos_bottom='10%', pos_top='10%'), is_control_axis_index=True)
-    mygrid.render(date_list[-1] + "ZJQS.html")
+    #mygrid.render(date_list[-1] + "ZJQS.html")
 
     return mygrid

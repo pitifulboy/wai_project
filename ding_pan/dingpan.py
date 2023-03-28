@@ -32,6 +32,7 @@ def write_to_mysql(data):
 
 def start_dingpan():
     i = 0
+
     while i < 10000:
         if check_trade_or_not():
             i = i + 1

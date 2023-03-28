@@ -13,5 +13,5 @@ def draw_table_by_df(df, tablename):
     table.set_global_opts(
         title_opts=ComponentTitleOpts(title=tablename)
     )
-    table.render(tablename + ".html")
+    # table.render(tablename + ".html")
     return table

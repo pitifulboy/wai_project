@@ -1,21 +1,18 @@
-
 from from_mysql.mysql_table_column import get_columnlist_from_mysql
 from from_mysql.mysql_table_df import select_share_by_startdate_type
 from pyecharts.charts import Bar, Grid
 from pyecharts import options as opts
 from operator import itemgetter
 
+
 def cal_lbtt(querydate):
     # 获取30天的交易数据
     # 暂时手动指定开始时间.2023-01-01后，涨停的交易数据
     df = select_share_by_startdate_type('2023-01-01', '涨停')
-
     # 有交易的日期list
     tradedate_list = get_columnlist_from_mysql('daily_market', '交易时间')
-
     # 已有交易数据中，最大的日期
     # max_date = tradedate_list[-1]
-
     # 获取待计算日的交易数据，并获取当日涨停的个股代码
     df_max_date_zt = df.loc[df['交易时间'] == querydate]
     max_date_zt_codelist = df_max_date_zt['股票代码'].tolist()
@@ -74,9 +71,8 @@ def draw_lbtt(querydate):
 
     mygrid = Grid(opts.InitOpts(bg_color='white', width="1600px", height="900px"))
     mygrid.add(mybar, grid_opts=opts.GridOpts(pos_left='30%', pos_top='10%'))
-    mygrid.render(querydate + "LBTT.html")
+    # mygrid.render(querydate + "LBTT.html")
 
     return mygrid
 
-
-#draw_lbtt('2023-03-24')
+# draw_lbtt('2023-03-24')

@@ -5,16 +5,15 @@ from from_mysql.mysql_table_df import select_share_by_date
 from my_pyecharts.draw_table import draw_table_by_df
 
 
-def oneday_zt_zb_dt(querydate, ana_type):
+def oneday_zt_zb_dt(data, ana_type):
     global result
-    df_get = select_share_by_date(querydate)
 
     # 调整格式.成交额，流通市值
-    df_get['成交额（亿）'] = (df_get['成交额（元）'] / 100000000).round(2)
-    df_get['流通市值（亿）'] = (df_get['流通市值（元）'] / 100000000).round(2)
+    data['成交额（亿）'] = (data['成交额（元）'] / 100000000).round(2)
+    data['流通市值（亿）'] = (data['流通市值（元）'] / 100000000).round(2)
 
     # 剔除未交易的数据
-    df_trade = df_get[df_get['最新价（元）'] > 0]
+    df_trade = data[data['最新价（元）'] > 0]
     # 触板（含涨停和炸板）
     df_cb = df_trade.loc[df_trade['最高价（元）'] == df_trade['涨停价（元）']]
 
@@ -44,10 +43,12 @@ def oneday_zt_zb_dt(querydate, ana_type):
     return result
 
 
-def draw_zt_zb_dt_table(querydate, ana_type):
-    result = oneday_zt_zb_dt(querydate, ana_type)
+def draw_zt_zb_dt_table(data, ana_type):
+
+    # 计算
+    result = oneday_zt_zb_dt(data, ana_type)
     # 画表
-    table = draw_table_by_df(result, querydate + ana_type)
+    table = draw_table_by_df(result,  ana_type)
     return table
 
 
