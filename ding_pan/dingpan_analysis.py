@@ -1,7 +1,7 @@
-# df['time'] = df['datetime'].str[11:]
-from from_mysql.mysql_table_df import select_dingpan
+from dapan_analysis.zdfb import draw_zhangdie_fenbu_bar
+from my_funcs.date_funcs import get_today_date
 
-df = select_dingpan()
-# 调整时间格式
-df['timeint'] = df['交易时间'].str[11:19].str.replace(':', '').astype('int32')
-print(df)
+
+def analysis_dingpan():
+    today_date = get_today_date()
+    draw_zhangdie_fenbu_bar(today_date, '盯盘')

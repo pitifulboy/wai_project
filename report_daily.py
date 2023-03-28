@@ -23,7 +23,7 @@ def page_simple_layout():
     page = Page(layout=Page.SimplePageLayout)
     page.add(
         # 资金趋势
-        draw_zhangdie_fenbu_bar(querydate),
+        draw_zhangdie_fenbu_bar(querydate,'每日'),
         draw_lbtt(querydate),
         draw_pic_amounts(15),
         draw_zt_zb_dt_table(querydate, '涨停'),

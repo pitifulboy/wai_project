@@ -4,12 +4,14 @@ import requests
 import pandas as pd
 from sqlalchemy import create_engine
 
+from ding_pan.dingpan_analysis import analysis_dingpan
+
 
 def get_dingpan_data():
     response = requests.get(
-        # 涨幅大于1%
+
         "http://api.waizaowang.com/doc/getWatchStockTimeKLine?type=1&code=all&export=5&token"
-        "=5b98e82a71a2afd3b84c5d14ad192c57&filter=zdfd>1&fields=code,tdate,price,zdfd,zded,cjl,cje,zhfu,hslv,name,"
+        "=5b98e82a71a2afd3b84c5d14ad192c57&fields=code,tdate,price,zdfd,zded,cjl,cje,zhfu,hslv,name,"
         "high,low,open,zrspj,zsz,ltsz,ssdate,z50,z52,z53,ztj,dtj")
     data = pd.DataFrame(response.json()['data'])
 
@@ -22,7 +24,7 @@ def get_dingpan_data():
                     "归属概念板块名称", "涨停价（元）", "跌停价（元）"]
 
     conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
-    data.to_sql('dingpan', con=conn, if_exists='append', index=False)
+    data.to_sql('dingpan', con=conn, if_exists='replace', index=False)
 
 
 def my_loop():
@@ -31,6 +33,7 @@ def my_loop():
         i = i + 1
         print("第" + str(i) + "次调用")
         get_dingpan_data()
+        analysis_dingpan()
         time.sleep(30)
 
 
