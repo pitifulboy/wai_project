@@ -43,7 +43,7 @@ def newest_GB(ndays):
     # 插入编号
     result.insert(0, '序号', range(1, 1 + len(result)))
     # 绘制图表
-    table = draw_table_by_df(result.head(50), max_tradedate + '日，' + str(ndays) + '天高标动态')
+    table = draw_table_by_df(result.head(20), max_tradedate + '日，' + str(ndays) + '天高标动态')
     return table
 
 # newest_GB(3)

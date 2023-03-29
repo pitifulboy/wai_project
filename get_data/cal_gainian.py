@@ -1,7 +1,4 @@
 import pandas as pd
-from sqlalchemy import create_engine
-
-from ding_pan.dingpan import get_dingpan_data
 
 
 def get_gainian_df(df):

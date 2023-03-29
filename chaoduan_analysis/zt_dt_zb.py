@@ -44,7 +44,6 @@ def oneday_zt_zb_dt(data, ana_type):
 
 
 def draw_zt_zb_dt_table(data, ana_type):
-
     # 计算
     result = oneday_zt_zb_dt(data, ana_type)
     # 画表

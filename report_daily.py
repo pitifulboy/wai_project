@@ -3,6 +3,7 @@
 from pyecharts.charts import Page
 from chaoduan_analysis.lian_ban import draw_lbtt
 from chaoduan_analysis.zt_dt_zb import draw_zt_zb_dt_table
+from dapan_analysis.gainian_analysis import draw_bk_table
 from dapan_analysis.zdfb import draw_zhangdie_fenbu_bar
 from dapan_analysis.zjqs import draw_pic_amounts
 from dapan_analysis.zjqs_cal import update_dcal_daily_amount_to_today
@@ -17,7 +18,7 @@ update_dcal_daily_amount_to_today()
 querydate = get_today_date()
 
 
-#querydate = '2023-03-27'
+# querydate = '2023-03-27'
 
 
 def page_simple_layout():
@@ -33,6 +34,9 @@ def page_simple_layout():
         draw_zt_zb_dt_table(data, '炸板'),
         draw_zt_zb_dt_table(data, '跌停'),
         newest_GB(7),
+        draw_bk_table(data, '概念名称'),
+        draw_bk_table(data, '归属行业板块名称'),
+        draw_bk_table(data, '归属地域板块名称'),
 
     )
     page.render(querydate + "my_report.html")

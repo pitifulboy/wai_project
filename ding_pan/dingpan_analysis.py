@@ -2,33 +2,31 @@ import pandas as pd
 import requests
 from pyecharts.charts import Page
 
-from chaoduan_analysis.zt_dt_zb import draw_zt_zb_dt_table, oneday_zt_zb_dt
+from chaoduan_analysis.zt_dt_zb import draw_zt_zb_dt_table
+from dapan_analysis.gainian_analysis import draw_bk_table
 from dapan_analysis.zdfb import draw_zhangdie_fenbu_bar
 from my_funcs.date_funcs import get_today_date
-from my_pyecharts.draw_table import draw_table_by_df
 
 
 def analysis_dingpan(data):
     today_date = get_today_date()
 
-    df_zt = oneday_zt_zb_dt(data, '涨停')
-
-    df_zb = oneday_zt_zb_dt(data, '炸板')
-    df_dt = oneday_zt_zb_dt(data, '跌停')
-
     page = Page(layout=Page.SimplePageLayout)
     page.add(
         # 资金趋势
         draw_zhangdie_fenbu_bar(data),
-        draw_table_by_df(df_zt, '涨停个股'),
-        draw_table_by_df(df_zb, '炸板个股'),
-        draw_table_by_df(df_dt, '跌停个股'),
+        draw_zt_zb_dt_table(data, '涨停'),
+        draw_zt_zb_dt_table(data, '炸板'),
+        draw_zt_zb_dt_table(data, '跌停'),
+        draw_bk_table(data, '概念名称'),
+        draw_bk_table(data, '归属行业板块名称'),
+        draw_bk_table(data, '归属地域板块名称'),
 
     )
     page.render(today_date + "盯盘.html")
 
-'''
-def get_dingpan_data():
+
+def get_dingpan_data2():
     response = requests.get(
 
         "http://api.waizaowang.com/doc/getWatchStockTimeKLine?type=1&code=all&export=5&token"
@@ -41,6 +39,6 @@ def get_dingpan_data():
 
     print(data.head(5))
     return data
-'''
 
-#analysis_dingpan(get_dingpan_data())
+
+analysis_dingpan(get_dingpan_data2())
