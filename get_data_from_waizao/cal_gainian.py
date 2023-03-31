@@ -20,4 +20,7 @@ def get_gainian_df(df):
 
     df_code_gn = pd.DataFrame(new_list, columns=["股票代码", "概念名称"])
 
+    path = r'D:\00 量化交易\\概念分析.xlsx'
+    df_code_gn.to_excel(path, sheet_name='1', engine='openpyxl')
+
     return df_code_gn

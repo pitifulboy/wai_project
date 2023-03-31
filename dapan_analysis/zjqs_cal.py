@@ -6,7 +6,7 @@ from from_mysql.mysql_table_column import get_columnlist_from_mysql
 from from_mysql.mysql_table_df import select_share_by_date
 
 # 判断是否已经计算，如果未计算，则计算到最新日期。
-from get_data.dailyMarkent import update_daily_market_to_today
+from get_data_from_waizao.dailyMarkent import update_daily_market_to_today
 from my_funcs.date_funcs import generate_datelist_by_start_end, get_today_date
 
 
