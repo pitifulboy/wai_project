@@ -1,7 +1,6 @@
 import pandas as pd
 import requests
 from pyecharts.charts import Page
-
 from chaoduan_analysis.zt_dt_zb import draw_zt_zb_dt_table
 from dapan_analysis.gainian_analysis import draw_bk_table
 from dapan_analysis.zdfb import draw_zhangdie_fenbu_bar
@@ -28,7 +27,6 @@ def analysis_dingpan(data):
 
 def get_dingpan_data2():
     response = requests.get(
-
         "http://api.waizaowang.com/doc/getWatchStockTimeKLine?type=1&code=all&export=5&token"
         "=5b98e82a71a2afd3b84c5d14ad192c57&fields=code,tdate,price,zdfd,zded,cjl,cje,zhfu,hslv,name,"
         "high,low,open,zrspj,zsz,ltsz,ssdate,z50,z52,z53,ztj,dtj")
