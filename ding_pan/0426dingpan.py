@@ -174,10 +174,15 @@ def analysis_minute_data():
     df_from_mysql = get_all_minute_data_from_mysql()
     time_list = get_columnlist_from_mysql('dingpan_minute_data', 'Date_HM')
 
+    minute_list = [1, 3, 10]
+    # 根据存在的数据，选择性计算
+    if len(time_list) < 3:
+        minute_list = [1]
+    elif len(time_list) < 11:
+        minute_list = [1, 3]
     # 加载到pyecharts上
     page = Page(layout=Page.SimplePageLayout)
 
-    minute_list = [1, 3, 30]
     keep_num = 0
     for minute in minute_list:
         if minute == 1:
@@ -188,10 +193,10 @@ def analysis_minute_data():
             df_3min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-4:-1])]
             df_mins = deal_all_minute_date(df_3min)
             keep_num = 40
-        elif minute == 30:
+        elif minute == 10:
             # 31分钟榜单，聚焦快速上涨
-            df_31min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-31:-1])]
-            df_mins = deal_all_minute_date(df_31min)
+            df_10min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-31:-1])]
+            df_mins = deal_all_minute_date(df_10min)
             keep_num = 50
 
         result = df_mins.sort_values(by='涨跌幅度（%）', ascending=False).head(keep_num)
