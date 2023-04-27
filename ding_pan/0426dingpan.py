@@ -1,23 +1,17 @@
 import time
 from datetime import datetime
+from pydoc import text
 
 import numpy as np
-import pandas as pd
-import requests
 import datetime
 import time
 import requests
 import pandas as pd
 from pyecharts.charts import Page
-from pyecharts.components import table
 from sqlalchemy import create_engine
 
 from from_mysql.judge_table_exist import check_table_exist
 from from_mysql.mysql_table_column import get_columnlist_from_mysql, get_max_from_mysql
-from pyecharts.components import Table
-from pyecharts.options import ComponentTitleOpts
-from pyecharts.render import make_snapshot
-from snapshot_phantomjs import snapshot
 
 # 首次获取盯盘数据，获取全部信息。
 from my_pyecharts.draw_table import draw_table_by_df
@@ -183,23 +177,16 @@ def analysis_minute_data():
     # 加载到pyecharts上
     page = Page(layout=Page.SimplePageLayout)
 
-    keep_num = 0
     for minute in minute_list:
+        #  1分钟榜，聚焦快速上涨
         if minute == 1:
             df_mins = df_from_mysql[df_from_mysql['Date_HM'] == time_list[-1]]
-            keep_num = 20
-        elif minute == 3:
-            # 3分钟榜单，聚焦快速上涨
-            df_3min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-4:-1])]
-            df_mins = deal_all_minute_date(df_3min)
-            keep_num = 40
-        elif minute == 10:
-            # 31分钟榜单，聚焦快速上涨
-            df_10min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-31:-1])]
-            df_mins = deal_all_minute_date(df_10min)
-            keep_num = 50
+        else:
+            # 几分钟榜单
+            df_min_peroid = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-minute - 1:-1])]
+            df_mins = deal_all_minute_date(df_min_peroid)
 
-        result = df_mins.sort_values(by='涨跌幅度（%）', ascending=False).head(keep_num)
+        result = df_mins.sort_values(by='涨跌幅度（%）', ascending=False).head(50)
         # 完善数据
         result_full = pd.merge(left=result, right=df_now, on='股票代码', how='left')
         # 筛选上涨个股
@@ -215,13 +202,24 @@ def analysis_minute_data():
         page.add(min_table)
 
     page.render("盯盘.html")
-    print(str(minute) + '涨幅榜，已更新')
+    print('涨幅榜，已更新')
 
     # 涨停，炸板，跌停榜单
     # 量比榜单。交易量与昨日占比榜
     # 板块涨幅榜单
 
 
+# 删除表
+def delete_table_dingpan_minute_data():
+    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+
+    sql = 'DROP TABLE IF EXISTS dingpan_minute_data;'
+    conn.execute(sql)
+
+
 # analysis_minute_data()
 
 dingpan_time_flow()
+
+# 每日手动删除表 dingpan_minute_data
+# delete_table_dingpan_minute_data()
