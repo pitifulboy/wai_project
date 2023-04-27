@@ -16,7 +16,7 @@ def get_columnlist_from_mysql(table_name, column_name):
     mysql = "SELECT DISTINCT(`" + column_name + "`) FROM " + table_name
 
     df = pd.read_sql(mysql, conn)
-    df_to_list = df[column_name].tolist()
+    df_to_list = df[column_name].sort_values(ascending=True).tolist()
     return df_to_list
 
 # print(get_columnlist_from_mysql('daily_market', 'tdate'))

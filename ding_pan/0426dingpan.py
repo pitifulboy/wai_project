@@ -8,13 +8,21 @@ import datetime
 import time
 import requests
 import pandas as pd
+from pyecharts.charts import Page
+from pyecharts.components import table
 from sqlalchemy import create_engine
 
 from from_mysql.judge_table_exist import check_table_exist
 from from_mysql.mysql_table_column import get_columnlist_from_mysql, get_max_from_mysql
-
+from pyecharts.components import Table
+from pyecharts.options import ComponentTitleOpts
+from pyecharts.render import make_snapshot
+from snapshot_phantomjs import snapshot
 
 # 首次获取盯盘数据，获取全部信息。
+from my_pyecharts.draw_table import draw_table_by_df
+
+
 def get_dingpan_data_full():
     response = requests.get(
         "http://api.waizaowang.com/doc/getWatchStockTimeKLine?type=1&code=all&export=5&token"
@@ -70,9 +78,10 @@ def dingpan_time_flow():
             time_first = df_first_part['Date_HM'].mean()
             if mysql_max_Date_HM != time_first:
                 # 如果存在数据，首次写入的数据需要处理。
-                # 获取数据库全部数据，计算前面数据之和。todo
-                df_from_mysql = deal_all_minute_date()
-                df_period=calculate_data_between_times(df_from_mysql, df_first_part)
+                # 获取数据库全部数据，计算前面数据之和。
+                df = get_all_minute_data_from_mysql()
+                df_from_mysql = deal_all_minute_date(df)
+                df_period = calculate_data_between_times(df_from_mysql, df_first_part)
 
                 write_minute_data_to_mysql(df_period)
             else:
@@ -85,7 +94,7 @@ def dingpan_time_flow():
         i = 0
         while i < 99999:
             # 间隔30秒再获取数据
-            time.sleep(30)
+            time.sleep(20)
             df_latest_part = get_dingpan_data_part()
 
             # 根据数据中的时间，判断数据是否重复
@@ -97,24 +106,15 @@ def dingpan_time_flow():
                 # 将新旧数据汇总
                 df_to_sql = calculate_data_between_times(df_first_part, df_latest_part)
                 write_minute_data_to_mysql(df_to_sql.round(2))
-                # 计算两者之间的交易数据
-                # analysis_minute_data(df_first_info)
             i = i + 1
             # 更新前值数据。
             df_first_part = df_latest_part
+            # 计算两者之间的交易数据
+            analysis_minute_data()
 
     else:
         print("其他时间")
         time.sleep(15)
-
-
-# 分析数据
-def analysis_minute_data(df_first_info):
-    # 1分钟，3分钟，5分钟，10分钟，30分钟涨幅榜
-    # 涨停，炸板，跌停榜单
-    # 量比榜单。交易量与昨日占比榜
-    # 板块涨幅榜单
-    pass
 
 
 def check_trade_time():
@@ -153,8 +153,8 @@ def calculate_data_between_times(df_first, df_last):
     return df_to_sql
 
 
-def deal_all_minute_date():
-    df = get_all_minute_data_from_mysql()
+# povit minute data 透视分钟数据
+def deal_all_minute_date(df):
     df_povit = pd.pivot_table(df, index='股票代码',
                               values=['交易时间', '最新价（元）', '涨跌幅度（%）', '成交额（元）', 'Date_HM'],
                               aggfunc={'交易时间': np.max, '最新价（元）': np.mean, '涨跌幅度（%）': np.sum,
@@ -165,5 +165,58 @@ def deal_all_minute_date():
     return df_result
 
 
-dingpan_time_flow()
+# 分析数据
+def analysis_minute_data():
+    df_now = get_dingpan_data_full()
 
+    # 1分钟，3分钟，5分钟，10分钟，30分钟涨幅榜
+    # 获取全部分钟数据
+    df_from_mysql = get_all_minute_data_from_mysql()
+    time_list = get_columnlist_from_mysql('dingpan_minute_data', 'Date_HM')
+
+    # 加载到pyecharts上
+    page = Page(layout=Page.SimplePageLayout)
+
+    minute_list = [1, 3, 30]
+    keep_num = 0
+    for minute in minute_list:
+        if minute == 1:
+            df_mins = df_from_mysql[df_from_mysql['Date_HM'] == time_list[-1]]
+            keep_num = 20
+        elif minute == 3:
+            # 3分钟榜单，聚焦快速上涨
+            df_3min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-4:-1])]
+            df_mins = deal_all_minute_date(df_3min)
+            keep_num = 40
+        elif minute == 30:
+            # 31分钟榜单，聚焦快速上涨
+            df_31min = df_from_mysql[df_from_mysql['Date_HM'].isin(time_list[-31:-1])]
+            df_mins = deal_all_minute_date(df_31min)
+            keep_num = 50
+
+        result = df_mins.sort_values(by='涨跌幅度（%）', ascending=False).head(keep_num)
+        # 完善数据
+        result_full = pd.merge(left=result, right=df_now, on='股票代码', how='left')
+        # 筛选上涨个股
+        result_full_up = result_full[result_full['涨跌幅度（%）_y'] > 0]
+        # 筛选部分数据
+        result_selected = result_full_up[
+            ['股票代码', '涨跌幅度（%）_x', '涨跌幅度（%）_y', '股票名称', '流通市值（元）', '归属行业板块名称', 'Date_HM_y']].copy()
+        result_selected['流通市值（元）'] = result_selected['流通市值（元）'] / 100000000
+        result_selected.columns = ['股票代码', '区间涨幅', '今日涨幅', '股票名称', '流通市值（亿）', '归属行业板块名称', '时间']
+
+        min_table = draw_table_by_df(result_selected.round(2), str(minute) + '分涨幅榜')
+        # 加载到page中
+        page.add(min_table)
+
+    page.render("盯盘.html")
+    print(str(minute) + '涨幅榜，已更新')
+
+    # 涨停，炸板，跌停榜单
+    # 量比榜单。交易量与昨日占比榜
+    # 板块涨幅榜单
+
+
+# analysis_minute_data()
+
+dingpan_time_flow()
