@@ -53,90 +53,112 @@ def get_dingpan_data_part():
 # 盯盘开始
 
 def dingpan_time_flow():
-    trade_type = check_trade_time()
-    # 判断是否集合竞价。竞价异动时间 9:20-9:25
-    if trade_type == "集合竞价":
-        pass
+    today_date = get_today_date_str()
+    # 数据库表名称：日期+盯盘。例如20230509dingpan
+    dingpan_table_name = today_date + "dingpan"
 
-    elif trade_type == "上午竞价" or trade_type == "下午竞价":
-        print(trade_type)
-        # 正在交易中
-        df_first = get_dingpan_data_full()
-        df_first_info = df_first[["股票代码", "昨日收盘价（元）", "总市值（元）", "流通市值（元）", "上市日期", "归属行业板块名称", "归属地域板块名称",
-                                  "归属概念板块名称", "涨停价（元）", "跌停价（元）"]]
-        df_first_part = df_first[["股票代码", "交易时间", "最新价（元）", "涨跌幅度（%）", "成交额（元）", 'Date_HM']]
-        # 判断数据是否存在，如果不存在写入mysql
-        # 判断表是否存在，如果存在，从mysql中获取时间
-        if check_table_exist("dingpan_minute_data"):
-            mysql_max_Date_HM = get_max_from_mysql("dingpan_minute_data", 'Date_HM')
+    # 循环
+    t = 0
+    while t < 9999:
+
+        # 判断当前时间的交易状态
+        trade_type = check_trade_time()
+        if trade_type == "开市前" or trade_type == "集合竞价":
+            # 休息60秒
+            time.sleep(60)
+            print("未开市")
+
+        elif trade_type == "上午竞价" or trade_type == "下午竞价":
+            # 获取交易数据
+            df_first = get_dingpan_data_full()
+            df_first_part = df_first[["股票代码", "交易时间", "最新价（元）", "涨跌幅度（%）", "成交额（元）", 'Date_HM']]
+            # 获取首次获取数据的时间
             time_first = df_first_part['Date_HM'].mean()
-            if mysql_max_Date_HM != time_first:
-                # 如果存在数据，首次写入的数据需要处理。
-                # 获取数据库全部数据，计算前面数据之和。
-                df = get_all_minute_data_from_mysql()
-                df_from_mysql = deal_all_minute_date(df)
-                df_period = calculate_data_between_times(df_from_mysql, df_first_part)
 
-                write_minute_data_to_mysql(df_period)
+            # 首次调用，历史数据使用数据库数据。非首次，使用保留的上次数据，计算区间数据。
+            if t == 0:
+                print("首次调用")
+                # 判断表是否存在，如果存在，从mysql中获取数据
+                if check_table_exist(dingpan_table_name):
+                    # 获取数据库最新时间
+                    df_all_from_mysql = get_all_minute_data_from_mysql(dingpan_table_name)
+                    mysql_max_Date_HM = df_all_from_mysql['Date_HM'].max()
+                    # 将数据库中的数据汇总。作为历史数据
+                    df_history = deal_all_minute_date(df_all_from_mysql)
+                    # 判断最新数据是否在数据库中。
+                    if mysql_max_Date_HM == time_first:
+                        print(str(time_first) + "分钟数据已经存在")
+                    else:
+                        # 生成区间数据
+                        df_period = calculate_data_between_times(df_history, df_first_part)
+                        # 将区间数据，写入数据库中。
+                        write_minute_data_to_mysql(df_period.round(2), dingpan_table_name)
+                else:
+                    # 将区间数据，写入数据库中。
+                    write_minute_data_to_mysql(df_first_part, dingpan_table_name)
+
+                # 将最新数据保存。
+                df_history = df_first_part
+
             else:
-                print(str(time_first) + "分钟数据已经存在")
-        else:
-            # 表不存在，直接写入数据
-            write_minute_data_to_mysql(df_first_part)
+                # 非首次调用,计算区间交易数据
+                # 判断数据是否更新
+                print("非首次调用")
+                time_history = df_history['Date_HM'].mean()
+                if time_history == time_first:
+                    print(str(time_first) + "分钟数据已经存在")
+                else:
+                    df_period = calculate_data_between_times(df_history, df_first_part)
+                    # 写入最新数据
+                    write_minute_data_to_mysql(df_period.round(2), dingpan_table_name)
+                    # 分析数据
+                    analysis_minute_data(dingpan_table_name)
+                    # 更新历史数据
+                    df_history = df_first_part
 
-        # 循环获取数据：
-        i = 0
-        while i < 99999:
-            # 间隔30秒再获取数据
+            t = t + 1
             time.sleep(20)
-            df_latest_part = get_dingpan_data_part()
-
-            # 根据数据中的时间，判断数据是否重复
-            time_first = df_first_part['Date_HM'].mean()
-            time_latest = df_latest_part['Date_HM'].mean()
-            if time_latest == time_first:
-                print('数据未更新')
-            else:
-                # 将新旧数据汇总
-                df_to_sql = calculate_data_between_times(df_first_part, df_latest_part)
-                write_minute_data_to_mysql(df_to_sql.round(2))
-            i = i + 1
-            # 更新前值数据。
-            df_first_part = df_latest_part
-            # 计算两者之间的交易数据
-            analysis_minute_data()
-
-    else:
-        print("其他时间")
-        time.sleep(15)
 
 
+        else:
+            print("其他时间")
+            time.sleep(15)
+
+
+# 根据时间，判断交易状态
 def check_trade_time():
     nowtime = datetime.datetime.now()
     nowtime_hm = nowtime.strftime("%H%M")
-    if 919 < int(nowtime_hm) < 926:
+    if int(nowtime_hm) < 915:
+        trade_type = "开市前"
+    elif 915 <= int(nowtime_hm) < 930:
         trade_type = "集合竞价"
-    elif 929 < int(nowtime_hm) < 1131:
+    elif 930 <= int(nowtime_hm) < 1130:
         trade_type = "上午竞价"
-    elif 1259 < int(nowtime_hm) < 1501:
+    elif 1130 <= int(nowtime_hm) < 1300:
+        trade_type = "中午休息"
+    elif 1300 <= int(nowtime_hm) < 1541:
         trade_type = "下午竞价"
     else:
         trade_type = "其他时间"
     return trade_type
 
 
-def write_minute_data_to_mysql(df):
+# 将数据写入指定表种。
+def write_minute_data_to_mysql(df, tablename):
     conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
-    df.to_sql('dingpan_minute_data', con=conn, if_exists='append', index=False)
+    df.to_sql(tablename, con=conn, if_exists='append', index=False)
 
 
-def get_all_minute_data_from_mysql():
+# 获取当日全部数据
+def get_all_minute_data_from_mysql(tablename):
     conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
-    mysql_1 = "SELECT  * FROM dingpan_minute_data "
+    mysql_1 = "SELECT  * FROM " + tablename
     df = pd.read_sql(mysql_1, conn)
     return df
 
 
+# 计算区间数据
 def calculate_data_between_times(df_first, df_last):
     df_merge = pd.merge(left=df_first, right=df_last, on='股票代码')
     # 计算中间时间的数据.
@@ -160,14 +182,14 @@ def deal_all_minute_date(df):
 
 
 # 分析数据
-def analysis_minute_data():
+def analysis_minute_data(tablename):
     df_now = get_dingpan_data_full()
 
     # 1分钟，3分钟，5分钟，10分钟，30分钟涨幅榜
     # 获取全部分钟数据
-    df_from_mysql = get_all_minute_data_from_mysql()
-    time_list = get_columnlist_from_mysql('dingpan_minute_data', 'Date_HM')
-
+    df_from_mysql = get_all_minute_data_from_mysql(tablename)
+    time_list = df_from_mysql['Date_HM'].sort_values(ascending=True).drop_duplicates().tolist()
+    print(time_list)
     minute_list = [1, 3, 10]
     # 根据存在的数据，选择性计算
     if len(time_list) < 3:
@@ -202,7 +224,7 @@ def analysis_minute_data():
         page.add(min_table)
 
     page.render("盯盘.html")
-    print('涨幅榜，已更新')
+    print('盯盘数据已经分析完毕')
 
     # 涨停，炸板，跌停榜单
     # 量比榜单。交易量与昨日占比榜
@@ -212,14 +234,14 @@ def analysis_minute_data():
 # 删除表
 def delete_table_dingpan_minute_data():
     conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
-
     sql = 'DROP TABLE IF EXISTS dingpan_minute_data;'
     conn.execute(sql)
 
 
-# analysis_minute_data()
+# 根据时间，判断交易状态
+def get_today_date_str():
+    my_today = datetime.datetime.now().strftime("%Y%m%d")
+    return my_today
+
 
 dingpan_time_flow()
-
-# 每日手动删除表 dingpan_minute_data
-# delete_table_dingpan_minute_data()
