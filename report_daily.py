@@ -18,11 +18,16 @@ update_dcal_daily_amount_to_today()
 querydate = get_today_date()
 
 
-# querydate = '2023-03-27'
+# querydate = '2023-06-13'
 
 
 def page_simple_layout():
     data = select_share_by_date(querydate)
+
+    # 保存数据
+    path = r'D:\00 量化交易\\' + str(querydate) + '日交易数据.xlsx'
+    # 取2位小数，并导出数据
+    data.round(2).to_excel(path, sheet_name='1', engine='openpyxl')
 
     page = Page(layout=Page.SimplePageLayout)
     page.add(
@@ -33,7 +38,11 @@ def page_simple_layout():
         draw_zt_zb_dt_table(data, '涨停'),
         draw_zt_zb_dt_table(data, '炸板'),
         draw_zt_zb_dt_table(data, '跌停'),
+        # 查询3日高标，top100复盘
+        newest_GB(3),
+        newest_GB(5),
         newest_GB(7),
+        # newest_GB(7),
         draw_bk_table(data, '概念名称'),
         draw_bk_table(data, '归属行业板块名称'),
         draw_bk_table(data, '归属地域板块名称'),
