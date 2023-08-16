@@ -2,9 +2,11 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
+from my_settings import get_my_database_sql
+
 
 def get_max_from_mysql(table_name, column_name):
-    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+    conn = create_engine(get_my_database_sql(), encoding='utf8')
     mysql = "SELECT MAX(`" + column_name + "`) FROM " + table_name
     df = pd.read_sql(mysql, conn)
     return df.iloc[0, 0]
@@ -12,7 +14,7 @@ def get_max_from_mysql(table_name, column_name):
 
 # 获取列的去重数据
 def get_columnlist_from_mysql(table_name, column_name):
-    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+    conn = create_engine(get_my_database_sql(), encoding='utf8')
     mysql = "SELECT DISTINCT(`" + column_name + "`) FROM " + table_name
 
     df = pd.read_sql(mysql, conn)

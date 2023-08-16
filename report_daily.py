@@ -12,11 +12,11 @@ from get_data_from_waizao.dailyMarkent import update_daily_market_to_today
 from my_funcs.date_funcs import get_today_date
 from qushi.gao_biao import newest_GB
 
+# 获取交易数据
 update_daily_market_to_today()
 update_dcal_daily_amount_to_today()
 
 querydate = get_today_date()
-
 
 # querydate = '2023-06-13'
 
@@ -25,9 +25,9 @@ def page_simple_layout():
     data = select_share_by_date(querydate)
 
     # 保存数据
-    path = r'D:\00 量化交易\\' + str(querydate) + '日交易数据.xlsx'
+    # path = r'D:\00 量化交易\\' + str(querydate) + '日交易数据.xlsx'
     # 取2位小数，并导出数据
-    data.round(2).to_excel(path, sheet_name='1', engine='openpyxl')
+    # data.round(2).to_excel(path, sheet_name='1', engine='openpyxl')
 
     page = Page(layout=Page.SimplePageLayout)
     page.add(
@@ -42,7 +42,6 @@ def page_simple_layout():
         newest_GB(3),
         newest_GB(5),
         newest_GB(7),
-        # newest_GB(7),
         draw_bk_table(data, '概念名称'),
         draw_bk_table(data, '归属行业板块名称'),
         draw_bk_table(data, '归属地域板块名称'),

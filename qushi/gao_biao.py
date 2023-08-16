@@ -37,20 +37,20 @@ def newest_GB(ndays):
     # 计算交易日历
     df_tradedate = generate_tradedate_df(max_tradedate, ndays)
     # 计算最早交易日
-    min_tradedate = df_tradedate['cal_date'].min()
+    min_tradedate = df_tradedate['交易时间'].min()
     # 计算高标数据
     result = cal_GB_start_end(min_tradedate, max_tradedate)
     # 插入编号
     result.insert(0, '序号', range(1, 1 + len(result)))
 
     # 保存数据
-    path = r'D:\00 量化交易\\' + max_tradedate + '日'+str(ndays)+'天高标动态.xlsx'
+    # path = r'D:\00 量化交易\\' + max_tradedate + '日'+str(ndays)+'天高标动态.xlsx'
     # 取2位小数，并导出数据
-    result.head(100).round(2).to_excel(path, sheet_name='1', engine='openpyxl')
-
+    # result.head(100).round(2).to_excel(path, sheet_name='1', engine='openpyxl')
 
     # 绘制图表
     table = draw_table_by_df(result.head(100), max_tradedate + '日，' + str(ndays) + '天高标动态')
     return table
 
-# newest_GB(3)
+
+# print(newest_GB(3))

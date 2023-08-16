@@ -13,6 +13,14 @@ def get_today_date():
     return date_str
 
 
+def get_nextyear_firstday():
+    # 今天
+    today_1 = pd.Timestamp.now()
+    nextyear = int(today_1.strftime('%Y')) + 1
+    nextyear_firstday = str(nextyear) + '-01-01'
+    return nextyear_firstday
+
+
 # 指定起始结束日期，生成日期list
 def generate_datelist_by_start_end(startdate, enddate):
     t = pd.period_range(start=startdate, end=enddate)
@@ -28,7 +36,9 @@ def generate_datelist_by_start_end(startdate, enddate):
 # 生产交易日期list
 def generate_tradedate_df(maxdate, ndays):
     df_tradedate = select_trade_date()
-    df_tradedate_open = df_tradedate[df_tradedate['is_open'] == 1]
-    df_tradedate_remain = df_tradedate_open[df_tradedate_open['cal_date'] <= maxdate]
+    # 筛选交易日
+    df_tradedate_open = df_tradedate[df_tradedate['是否休市'] == 3]
+    df_tradedate_remain = df_tradedate_open[df_tradedate_open['交易时间'] <= maxdate]
     df_tradedate_remain_result = df_tradedate_remain[-ndays:]
     return df_tradedate_remain_result
+

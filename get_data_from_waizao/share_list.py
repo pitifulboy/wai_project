@@ -1,13 +1,15 @@
 import requests
 import pandas as pd
 from sqlalchemy import create_engine
-from mytoken.token_str import get_waizao_token
+from my_settings import get_my_database_sql
+from mytoken_fun import get_my_waizao_token
 
 
 # 每周更新一次/手动更新。
 
+
 def update_share_message():
-    mytoken = get_waizao_token()
+    mytoken = get_my_waizao_token()
     # 按照网站模板，拼接。
     requests_str = "http://api.waizaowang.com/doc/getBaseInfo?type=1&code=all&export=5&token=" + mytoken + "&fields=all"
     response = requests.get(requests_str)
@@ -19,6 +21,8 @@ def update_share_message():
                     "z53"]
 
     print(data)
-    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+    conn = create_engine(get_my_database_sql(), encoding='utf8')
     data.to_sql('share_list', con=conn, if_exists='replace', index=False)
 
+
+update_share_message()

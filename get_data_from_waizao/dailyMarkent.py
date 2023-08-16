@@ -4,7 +4,8 @@ import pandas as pd
 from sqlalchemy import create_engine
 from from_mysql.mysql_table_column import get_columnlist_from_mysql
 from my_funcs.date_funcs import get_today_date, generate_datelist_by_start_end
-from mytoken.token_str import get_waizao_token
+from my_settings import get_my_database_sql
+from mytoken_fun import get_my_waizao_token
 
 
 def judge_update_or_not(update_date):
@@ -20,7 +21,7 @@ def judge_update_or_not(update_date):
 
 # 直接调用
 def update_daily_market(startdate, enddate):
-    mytoken = get_waizao_token()
+    mytoken = get_my_waizao_token()
 
     response = requests.get(
         "http://api.waizaowang.com/doc/getDailyMarket?type=1&code=all&startDate=" + startdate + "&endDate=" + enddate + "&export=5&token=" + mytoken + "&fields=code,tdate,price,zdfd,cjl,cje,hslv,dsyl,name,zgj,zdj,jrkpj,zrspj,zsz,ltsz,ssdate,zgb,ltgb,z50,z52,z53,z197,ztj,dtj,zhfu")
@@ -36,8 +37,11 @@ def update_daily_market(startdate, enddate):
                         "跌停价（元）", "振幅（%）"]
 
         print(data.head(5))
-        conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+        conn = create_engine(get_my_database_sql(), encoding='utf8')
         data.to_sql('daily_market', con=conn, if_exists='append', index=False)
+
+
+# update_daily_market('2023-08-10', '2023-08-10')
 
 
 # 按日调用。
@@ -46,7 +50,7 @@ def update_daily_market_by_datelist(startdate, enddate):
     for i in datelist:
         judge_update_or_not(i)
         # 调用一次休息
-        time.sleep(15)
+        time.sleep(1)
 
 
 # 更新到今天
@@ -60,6 +64,7 @@ def update_daily_market_to_today():
 # 指定日期更新
 # update_daily_market_by_datelist('2022-06-01', '2023-03-23')
 
-# update_daily_market_to_today()
+#update_daily_market_to_today()
 
+# 首次使用本项目代码，需要手动指定更新一天的数据。以便后续自动更新，因为自动更新的代码中，会查询本地数据库的最新日期。
 # update_daily_market('2022-06-01', '2022-06-01')

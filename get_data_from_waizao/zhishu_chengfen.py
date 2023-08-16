@@ -6,7 +6,8 @@ import pandas as pd
 # 获取指数成分股，并存入mysql。
 from sqlalchemy import create_engine
 
-from mytoken.token_str import get_waizao_token
+from my_settings import get_my_database_sql
+from mytoken_fun import get_my_waizao_token
 
 
 def get_zscfg_df(zscf_type):
@@ -14,7 +15,7 @@ def get_zscfg_df(zscf_type):
     # zscf_type=2，获取【上证50】
     # zscf_type=3，获取【中证500】
     # zscf_type=4，获取【科创50】
-    token = get_waizao_token()
+    token = get_my_waizao_token()
     url_str = "http://api.waizaowang.com/doc/getZhiShuChengFenGu?mtype=%s&export=5&token=%s&fields=mtype,code," \
               "indexname,name,secucode" % (zscf_type, token)
     # 获取数据
@@ -39,7 +40,7 @@ def get_all_zscfg_df():
 
 
 def write_all_zscfg_to_mysql(df):
-    conn = create_engine('mysql+pymysql://root:123456@localhost:3306/waizao_data', encoding='utf8')
+    conn = create_engine(get_my_database_sql(), encoding='utf8')
     df.to_sql('zscfg', con=conn, if_exists='replace', index=False)
 
 # 更新主要指数成分
