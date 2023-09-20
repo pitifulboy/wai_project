@@ -5,7 +5,7 @@ from pyecharts import options as opts
 from operator import itemgetter
 
 
-def cal_lbtt(querydate):
+def cal_lbtt(querydate, lb_type):
     # 获取30天的交易数据
     # 暂时手动指定开始时间.2023-01-01后，涨停的交易数据
     df = select_share_by_startdate_type('2023-01-01', '涨停')
@@ -15,7 +15,15 @@ def cal_lbtt(querydate):
     # max_date = tradedate_list[-1]
     # 获取待计算日的交易数据，并获取当日涨停的个股代码
     df_max_date_zt = df.loc[df['交易时间'] == querydate]
-    max_date_zt_codelist = df_max_date_zt['股票代码'].tolist()
+
+    if lb_type == "no_st_share":
+        df_max_date_zt_st_type = df_max_date_zt[df_max_date_zt['股票名称'].str.contains("ST") == False]
+
+    elif lb_type == "all":
+        df_max_date_zt_st_type = df_max_date_zt
+
+
+    max_date_zt_codelist = df_max_date_zt_st_type['股票代码'].tolist()
 
     lbtt_data_list = []
 
@@ -36,15 +44,16 @@ def cal_lbtt(querydate):
             lbtt_data_list.append([querydate, df_code.loc[:, '股票名称'].tolist()[-1], max_date_zt_codelist[i], n])
 
     lbtt_ordered = sorted(lbtt_data_list, key=itemgetter(3), reverse=False)
+
     print(querydate + '日，连板数据')
     print(lbtt_ordered)
 
     return lbtt_ordered
 
 
-# 绘制连板天梯
-def draw_lbtt(querydate):
-    lbtt_ordered = cal_lbtt(querydate)
+# 绘制连板天梯，含st 和不含 st
+def draw_lbtt(querydate, lb_type):
+    lbtt_ordered = cal_lbtt(querydate, lb_type)
     # 隐藏 部分代码，名称信息
     # name = [x[0][3:11] for x in lbtt_ordered]
     # 完整显示 代码 和名称
@@ -54,13 +63,13 @@ def draw_lbtt(querydate):
     # 作图
     mybar = (
         Bar()
-        .add_xaxis(name)
-        .add_yaxis("连板数", num)
-        .reversal_axis()
-        .set_series_opts(
+            .add_xaxis(name)
+            .add_yaxis("连板数", num)
+            .reversal_axis()
+            .set_series_opts(
             label_opts=opts.LabelOpts(is_show=True, font_size=18, color="#000000", position='right'),
         )
-        .set_global_opts(
+            .set_global_opts(
             title_opts=opts.TitleOpts(title=querydate + "连板天梯", pos_top='5%',
                                       pos_left='10%', title_textstyle_opts=opts.TextStyleOpts(font_size=36), ),
             xaxis_opts=opts.AxisOpts(is_show=False),

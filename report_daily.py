@@ -18,6 +18,7 @@ update_dcal_daily_amount_to_today()
 
 querydate = get_today_date()
 
+
 # querydate = '2023-06-13'
 
 
@@ -33,7 +34,7 @@ def page_simple_layout():
     page.add(
         # 资金趋势
         draw_zhangdie_fenbu_bar(data),
-        draw_lbtt(querydate),
+        draw_lbtt(querydate, "no_st_share"),
         draw_pic_amounts(15),
         draw_zt_zb_dt_table(data, '涨停'),
         draw_zt_zb_dt_table(data, '炸板'),

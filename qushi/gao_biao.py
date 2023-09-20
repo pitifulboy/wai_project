@@ -53,4 +53,6 @@ def newest_GB(ndays):
     return table
 
 
+
+
 # print(newest_GB(3))

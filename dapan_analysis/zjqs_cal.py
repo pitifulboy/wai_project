@@ -65,7 +65,7 @@ def update_dcal_daily_amount_to_today():
 
 
 # 项目首次使用，计算指定日期。
-# cal_daily_amount('2022-06-01')
+# cal_daily_amount('2023-08-01')
 # update_dcal_daily_amount_to_today()
 
 '''# 日期，大盘交易额，涨停交易额，涨停数，炸板交易额，炸板数,跌停交易额，跌停数
