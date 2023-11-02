@@ -19,7 +19,7 @@ update_dcal_daily_amount_to_today()
 querydate = get_today_date()
 
 
-# querydate = '2023-06-13'
+#querydate = '2023-10-31'
 
 
 def page_simple_layout():
